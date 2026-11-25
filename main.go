@@ -4,6 +4,7 @@ import (
 	_ "flag"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 func main() {
@@ -12,9 +13,13 @@ func main() {
 	if err != nil {
 		log.Println("err: couldn't access user config dir")
 	}
-	configPath := userConfigPath + "gtrack-cli/config"
-	logPath := userConfigPath + "gtrack-cli/log"
-	trackerPath := userConfigPath + "gtrack-cli/tracker"
+
+	uniformPath := filepath.Join(userConfigPath, "gtrack-cli")
+
+	configPath := filepath.Join(uniformPath, "config")
+	logPath := filepath.Join(uniformPath, "log")
+	trackPath := filepath.Join(uniformPath, "tracker")
+
 	err = os.MkdirAll(userConfigPath, 0644)
 	if err != nil {
 		log.Println("err: couldn't access user config dir")

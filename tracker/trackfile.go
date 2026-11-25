@@ -8,25 +8,27 @@ import (
 	"strings"
 )
 
-func AppendTrackerFile(trackPath, logPath, contentPath string) (err error) {
+func AppendTrackerFile(preciseTrackPath, contentPath string) (err error) {
 	_, err = os.Stat(contentPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			fmt.Println("err: file", filepath.Base(contentPath), "is not found")
 			return
 		}
-		fmt.Print("err: an unexpected error has occured. See the", logPath, "for details")
+		fmt.Println("err: an unexpected error has occured. See the log for details")
 		return
 	}
-	file, err := os.OpenFile(trackPath+".trackerfile", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
+	trackPrecise := filepath.Join(preciseTrackPath, "trackerfile.txt")
+
+	file, err := os.OpenFile(trackPrecise, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
 	if err != nil {
-		fmt.Println("err: could not open trackerfile. Find more info in the", logPath)
+		fmt.Println("err: could not open trackerfile. See the log for details")
 		return
 	}
 	defer file.Close()
 	_, err = file.WriteString(contentPath + "\n")
 	if err != nil {
-		fmt.Println("err: could not write to trackerfile. Find more info in the", logPath)
+		fmt.Println("err: could not write to trackerfile. See the log for details")
 		return
 	}
 	return
@@ -36,10 +38,10 @@ func GetTrackerFile(trackPath string) {
 	fmt.Println("trackerfile is located in ", trackPath)
 }
 
-func GetTrackedFiles(trackPath, logPath string) (err error) {
+func GetTrackedFiles(trackPath string) (err error) {
 	file, err := os.Open(trackPath)
 	if err != nil {
-		fmt.Println("err: could not open trackerfile. Find more info in the", logPath)
+		fmt.Println("err: could not open trackerfile. See the log for details")
 		return
 	}
 	defer file.Close()
@@ -54,10 +56,10 @@ func GetTrackedFiles(trackPath, logPath string) (err error) {
 	return
 }
 
-func RemoveTrackerEntry(entry, trackPath, logPath string) (err error) {
+func RemoveTrackerEntry(entry, trackPath string) (err error) {
 	file, err := os.Open(trackPath)
 	if err != nil {
-		fmt.Println("err: could not open trackerfile. Find more info in the", logPath)
+		fmt.Println("err: could not open trackerfile. See the log for details")
 		return
 	}
 	scanner := bufio.NewScanner(file)
@@ -78,13 +80,13 @@ func RemoveTrackerEntry(entry, trackPath, logPath string) (err error) {
 	file.Close()
 	file, err = os.OpenFile(trackPath, os.O_TRUNC|os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
-		fmt.Println("err: could not open trackerfile. Find more info in the", logPath)
+		fmt.Println("err: could not open trackerfile. See the log for details")
 		return
 	}
 	defer file.Close()
 	_, err = file.WriteString(builder.String())
 	if err != nil {
-		fmt.Println("err: could not remove entry: unable to write to trackfile. Find more info in the", logPath)
+		fmt.Println("err: could not remove entry: unable to write to trackfile. See the log for details")
 		return
 	}
 	return
