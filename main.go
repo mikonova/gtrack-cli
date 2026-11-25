@@ -1,7 +1,9 @@
 package main
 
 import (
+	"flag"
 	_ "flag"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -33,4 +35,9 @@ func main() {
 		log.Println("err: couldn't create logfile")
 	}
 	log.SetOutput(file)
+
+	flag.Usage = func() {
+		fmt.Println("aboba")
+		flag.PrintDefaults()
+	}
 }
