@@ -114,6 +114,13 @@ func ParseArg(configPath, trackPath string) (err error) {
 		if err != nil {
 			return
 		}
+
+	default:
+		if os.Args[2][0:0] == "-" {
+			return nil
+		}
+
+		fmt.Println("err: no such argument exists")
 	}
 	return nil
 }
