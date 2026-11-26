@@ -9,6 +9,12 @@ import (
 	"path/filepath"
 )
 
+var (
+	errExists   = "err: this remote already exists"
+	errNoSetup  = "err: Couldn't set up a configuration file for the current remote"
+	errNoRemote = "err: incorrect remote name or it doesnt exist"
+)
+
 func ParseArgs(configPath, trackPath string) (err error) {
 	flagsAllowed := true
 	skipRounds := 0
@@ -32,7 +38,7 @@ func ParseArgs(configPath, trackPath string) (err error) {
 
 			_, err = os.Stat(precisePath)
 			if err == nil {
-				fmt.Println("err: this remote already exists")
+				fmt.Println(errExists)
 				err = nil
 				return
 			}
@@ -46,13 +52,13 @@ func ParseArgs(configPath, trackPath string) (err error) {
 
 			err = os.MkdirAll(precisePath, 0644)
 			if err != nil {
-				fmt.Println("err: Couldn't set up a configuration dir for the current remote")
+				fmt.Println(errNoSetup)
 				return
 			}
 			trackerfile := filepath.Join(precisePath, "trackerfile.txt")
 			file, err = os.Create(trackerfile)
 			if err != nil {
-				fmt.Println("err: Couldn't set up a configuration file for the current remote")
+				fmt.Println(errNoSetup)
 				return
 			}
 			file.Close()
@@ -64,7 +70,7 @@ func ParseArgs(configPath, trackPath string) (err error) {
 
 			_, err = os.Stat(precisePath)
 			if err != nil {
-				fmt.Println("err: this remote doesn't exist")
+				fmt.Println()
 				err = nil
 				return
 			}
@@ -89,7 +95,7 @@ func ParseArgs(configPath, trackPath string) (err error) {
 				precisePath := filepath.Join(trackPath, os.Args[2])
 				_, err = os.Stat(precisePath)
 				if err != nil {
-					fmt.Println("err: no such remote found")
+					fmt.Println(errNoRemote)
 					return
 				}
 
@@ -100,21 +106,21 @@ func ParseArgs(configPath, trackPath string) (err error) {
 				skipRounds = 3
 				continue
 			default:
-				fmt.Println(`err: incorrect syntax. Expected: "add <-once|--once> <remote> <file|directory>" or "add <-all|--all> <file|directory>"`)
+				fmt.Println("err: incorrect syntax. Expected: \"add <-once |--once> <remote> <file|directory>\" or \"add <-all|--all> <file|directory>\"")
 				err = nil
 				return
 			}
 
 		case "del":
 			if (os.Args[k+1] == "" || os.Args[k+2] == "") || (os.Args[k+1] == "" && os.Args[k+2] == "") {
-				fmt.Println("err: empty args. Format: add <remote> <file|directory> ")
+				fmt.Println("err: empty args. Format: del <remote> <file|directory> ")
 				err = nil
 				return
 			}
 			precisePath := filepath.Join(trackPath, os.Args[k+1])
 			_, err = os.Stat(precisePath)
 			if err != nil {
-				fmt.Println("err: no such remote found")
+				fmt.Println(errNoRemote)
 				return
 			}
 
@@ -128,7 +134,7 @@ func ParseArgs(configPath, trackPath string) (err error) {
 			case "-once", "--once":
 				precisePath := filepath.Join(configPath, os.Args[k+2])
 				if _, err = os.Stat(precisePath); err != nil {
-					fmt.Println("err: incorrect remote name")
+					fmt.Println(errNoRemote, "Format: \"sync -once <remote>\"")
 					return
 				}
 				// TODO: add syncing logic for one remote
@@ -138,10 +144,29 @@ func ParseArgs(configPath, trackPath string) (err error) {
 				// TODO: add syncing logic for all the files for all remotes
 				skipRounds = 1
 			default:
-				fmt.Println(`err: incorrect format. Allowed args after "sync" are "-all" or "-once <remote>"`)
+				fmt.Println("err: incorrect format. Allowed args after \"sync\" are \"-all\" or \"-once <remote>\"")
 				err = nil
 				return
 			}
+		case "fetch":
+			switch os.Args[k+1] {
+			case "-once", "--once":
+				precisePath := filepath.Join(configPath, os.Args[k+2])
+				if _, err = os.Stat(precisePath); err != nil {
+					fmt.Println(errNoRemote, "Format: \"fetch -once <remote>\"")
+					return
+				}
+				// TODO: add fetching logic for one remote
+				skipRounds = 2
+			case "-all", "--all":
+				// TODO: add fetching logic for all the files for all remotes
+				skipRounds = 1
+			default:
+				fmt.Println("err: incorrect format. Allowed args after \"fetch\" are \"-all\" or \"-once <remote>\"")
+				err = nil
+				return
+			}
+
 		default:
 			if os.Args[k] == "--" {
 				flagsAllowed = false

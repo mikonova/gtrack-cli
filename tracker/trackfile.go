@@ -3,6 +3,7 @@ package tracker
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -34,29 +35,7 @@ func AppendTrackerFile(preciseTrackPath, contentPath string) (err error) {
 	return
 }
 
-func GetTrackerFile(trackPath string) {
-	fmt.Println("trackerfile is located in ", trackPath)
-}
-
-func GetTrackedFiles(trackPath string) (err error) {
-	file, err := os.Open(trackPath)
-	if err != nil {
-		fmt.Println("err: could not open trackerfile. See the log for details")
-		return
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	fmt.Println("List of all entries in the trackerfile")
-	for scanner.Scan() {
-		fmt.Println(scanner.Text())
-	}
-	if err = scanner.Err(); err != nil {
-		return
-	}
-	return
-}
-
-func RemoveTrackerEntry(entry, trackPath string) (err error) {
+func RemoveTrackerFile(entry, trackPath string) (err error) {
 	file, err := os.Open(trackPath)
 	if err != nil {
 		fmt.Println("err: could not open trackerfile. See the log for details")
@@ -90,4 +69,14 @@ func RemoveTrackerEntry(entry, trackPath string) (err error) {
 		return
 	}
 	return
+}
+
+func GetEntriesPerRemote(remotePath string) []string {
+	_, err := os.Stat(remotePath)
+	if err != nil {
+		fmt.Println(err.Error())
+		log.Fatalln(err.Error())
+	}
+	path := filepath.Join(remotePath, "trackerfile.txt")
+	os
 }

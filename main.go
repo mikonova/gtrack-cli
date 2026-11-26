@@ -37,7 +37,23 @@ func main() {
 	log.SetOutput(file)
 
 	flag.Usage = func() {
-		fmt.Println("aboba")
+		fmt.Println(`
+		Usage: gtrack-cli [OPTIONAL ARGS] [ARGUMENT] [ARG FLAG] [VALUES...] [OPTIONAL ARGS]
+		
+		Arguments:
+
+		help: displays this message
+		remote-add <address>: add a new remote to sync list
+		remote-del <address>: remove a remote from the sync list
+		add -all: add a new file to all the remotes
+		add -once <remote> <file|dir>: add a file for a certain remote
+		del -all <file|dir>: remove a file or dir from all the remotes
+		del -once <remote> <file|dir>: remove a file or directory from one remote
+		sync -once <remote>: sync all files for a certain remotes
+		sync -all: sync all files for all remotes
+		fetch -once <remote>: fetch files or dirs from a specific remote
+		fetch -all: fetch files from all remotes`)
+
 		flag.PrintDefaults()
 	}
 }
