@@ -99,7 +99,7 @@ func ParseArgs(configPath, trackPath string) (err error) {
 					return
 				}
 
-				err = tracker.AppendTrackerFile(precisePath, os.Args[3])
+				err = tracker.AddTrackerEntry(precisePath, os.Args[3])
 				if err != nil {
 					return
 				}

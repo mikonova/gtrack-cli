@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func AppendTrackerFile(preciseTrackPath, contentPath string) (err error) {
+func AddTrackerEntry(preciseTrackPath, contentPath string) (err error) {
 	_, err = os.Stat(contentPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -35,7 +35,7 @@ func AppendTrackerFile(preciseTrackPath, contentPath string) (err error) {
 	return
 }
 
-func RemoveTrackerFile(entry, trackPath string) (err error) {
+func RemoveTrackerEntry(entry, trackPath string) (err error) {
 	file, err := os.Open(trackPath)
 	if err != nil {
 		fmt.Println("err: could not open trackerfile. See the log for details")
@@ -78,5 +78,20 @@ func GetEntriesPerRemote(remotePath string) []string {
 		log.Fatalln(err.Error())
 	}
 	path := filepath.Join(remotePath, "trackerfile.txt")
-	os
+	file, err := os.Open(path)
+
+	scanner := bufio.NewScanner(file)
+	buffer := make([]string, 0)
+	for scanner.Scan() {
+		buffer = append(buffer, scanner.Text())
+	}
+	if scanner.Err() != nil {
+		fmt.Println("err: error encountered in the process of reading the file")
+		log.Fatalln(err.Error())
+	}
+	return buffer
+}
+
+func AddToEveryRemote(filepath, trackerCommonPath string) {
+	// TODO: add implementation
 }
