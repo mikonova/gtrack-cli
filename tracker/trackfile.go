@@ -1,97 +1,109 @@
 package tracker
 
 import (
-	"bufio"
 	"fmt"
+	"gtrack-cli/uplink/protocol/headers/category"
+	"gtrack-cli/uplink/protocol/headers/types"
 	"log"
+	"net"
 	"os"
-	"path/filepath"
-	"strings"
+	"time"
+
+	"github.com/BurntSushi/toml"
 )
 
-func AddTrackerEntry(preciseTrackPath, contentPath string) (err error) {
-	_, err = os.Stat(contentPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			fmt.Println("err: file", filepath.Base(contentPath), "is not found")
-			return
-		}
-		fmt.Println("err: an unexpected error has occured. See the log for details")
-		return
-	}
-	trackPrecise := filepath.Join(preciseTrackPath, "trackerfile.txt")
+var remoteMap map[string][]string
 
-	file, err := os.OpenFile(trackPrecise, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
+func AddRemote(remote, trackerPath string) {
+	if !isConnValid(remote) {
+		errStr := "err: connection string is not valid"
+		fmt.Println(errStr)
+		log.Fatalln(errStr)
+	}
+	_, err := toml.DecodeFile(trackerPath, &remoteMap)
 	if err != nil {
-		fmt.Println("err: could not open trackerfile. See the log for details")
-		return
-	}
-	defer file.Close()
-	_, err = file.WriteString(contentPath + "\n")
-	if err != nil {
-		fmt.Println("err: could not write to trackerfile. See the log for details")
-		return
-	}
-	return
-}
-
-func RemoveTrackerEntry(entry, trackPath string) (err error) {
-	file, err := os.Open(trackPath)
-	if err != nil {
-		fmt.Println("err: could not open trackerfile. See the log for details")
-		return
-	}
-	scanner := bufio.NewScanner(file)
-	builder := strings.Builder{}
-	fmt.Println("List of all entries in the trackerfile")
-	for scanner.Scan() {
-		text := scanner.Text()
-		if n := strings.Compare(entry, text); n == 0 {
-			continue
-		}
-		builder.WriteString(text)
-		builder.WriteRune('\n')
-	}
-	if err = scanner.Err(); err != nil {
-		file.Close()
-		return
-	}
-	file.Close()
-	file, err = os.OpenFile(trackPath, os.O_TRUNC|os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		fmt.Println("err: could not open trackerfile. See the log for details")
-		return
-	}
-	defer file.Close()
-	_, err = file.WriteString(builder.String())
-	if err != nil {
-		fmt.Println("err: could not remove entry: unable to write to trackfile. See the log for details")
-		return
-	}
-	return
-}
-
-func GetEntriesPerRemote(remotePath string) []string {
-	_, err := os.Stat(remotePath)
-	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("err: couldn't read the tracking file")
 		log.Fatalln(err.Error())
 	}
-	path := filepath.Join(remotePath, "trackerfile.txt")
-	file, err := os.Open(path)
 
-	scanner := bufio.NewScanner(file)
-	buffer := make([]string, 0)
-	for scanner.Scan() {
-		buffer = append(buffer, scanner.Text())
+	if _, exists := remoteMap[remote]; exists {
+		fmt.Println("err: remote already added")
+		return
+	} else {
+		remoteMap[remote] = nil
+		file, err := os.Create(trackerPath)
+		if err != nil {
+			fmt.Println("err: Couldn't open the tracking file")
+			log.Fatalln("err:", err.Error())
+		}
+		defer file.Close()
+
+		encoder := toml.NewEncoder(file)
+		err = encoder.Encode(remoteMap)
+		if err != nil {
+			fmt.Println("err: Couldn't encode data to toml and write")
+			log.Fatalln("err:", err.Error())
+		}
 	}
-	if scanner.Err() != nil {
-		fmt.Println("err: error encountered in the process of reading the file")
-		log.Fatalln(err.Error())
-	}
-	return buffer
 }
 
-func AddToEveryRemote(filepath, trackerCommonPath string) {
-	// TODO: add implementation
+func RemoveRemote(remote, trackerPath string) {
+	_, err := toml.DecodeFile(trackerPath, &remoteMap)
+	if err != nil {
+		fmt.Println("err: couldn't read the tracking file")
+		log.Fatalln(err.Error())
+	}
+	delete(remoteMap, remote)
+	file, err := os.Create(trackerPath)
+	if err != nil {
+		fmt.Println("err: Couldn't open the tracking file")
+		log.Fatalln("err:", err.Error())
+	}
+	defer file.Close()
+
+	encoder := toml.NewEncoder(file)
+	err = encoder.Encode(remoteMap)
+	if err != nil {
+		fmt.Println("err: Couldn't encode data to toml and write")
+		log.Fatalln("err:", err.Error())
+	}
+
+}
+
+func AddOnce(trackerPath, contentPath string) (err error) {
+
+}
+
+func RemoveOnce(trackerPath, contentPath string) (err error) {
+
+}
+
+func GetFor(trackerPath, remoteName string) []string {
+
+}
+
+func AddToAll(trackerPath, contentPath string) {
+
+}
+
+func RemoveFromAll(contentPath string) {
+
+}
+
+func GetAll(contentPath string) {
+
+}
+
+func isConnValid(connString string) bool {
+	if conn, err := net.Dial("tcp", connString); err != nil {
+		return false
+	} else {
+		go func() {
+			buf := [2]byte{category.INFO, types.ABORT_CONN}
+			conn.SetWriteDeadline(time.Now().Add(time.Second * 10))
+			conn.Write(buf[:])
+			conn.Close()
+		}()
+		return true
+	}
 }
